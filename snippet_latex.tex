@@ -1,0 +1,79 @@
+% ============================================================
+% NUEVA SUBSECCION: Metricas ampliadas (7 metricas)
+% Pegar dentro de la Seccion VII (Resultados), despues de las Tablas I-II
+% originales, o como nueva subseccion "D. Metricas ampliadas".
+% Requiere \usepackage{graphicx} y \usepackage{booktabs} (ya incluidos en main.tex)
+% ============================================================
+
+\subsection{M\'etricas ampliadas: memoria y crecimiento emp\'irico}
+
+Con el fin de caracterizar con mayor profundidad el comportamiento de BMSSP
+frente a Dijkstra, se repiti\'o la experimentaci\'on del Experimento 1 y el
+Experimento 2 con \textbf{10 repeticiones por instancia} (en lugar de una sola
+ejecuci\'on), y se instrumentaron dos m\'etricas adicionales de memoria: la
+memoria pico del proceso (\emph{peak RSS}, v\'ia \texttt{getrusage()}) y los
+bytes de heap asignados durante la fase de soluci\'on (v\'ia una sobrecarga de
+\texttt{operator new}/\texttt{delete} activa solo durante la llamada al
+algoritmo). Cada algoritmo se ejecut\'o en un proceso independiente para evitar
+contaminaci\'on de memoria entre mediciones.
+
+Con 10 repeticiones, el speedup de BMSSP respecto a Dijkstra convergi\'o a un
+rango de \textbf{3.47x--4.13x} en las instancias m\'as grandes, sensiblemente
+m\'as estable que el rango 3.1x--10.2x obtenido con una \'unica ejecuci\'on, y
+consistente con el factor de 3--4x reportado por Castro et al.
+\cite{implbmssp2025}.
+
+En cuanto a memoria, se observa una disociaci\'on interesante entre ambas
+m\'etricas: la memoria pico (RSS) de BMSSP super\'o a la de Dijkstra en solo un
+7.5\% en la instancia m\'as grande de Exp2 ($m=250\,000$), mientras que el
+volumen de bytes de heap asignados durante la soluci\'on fue, en promedio,
+\textbf{23 veces mayor} en BMSSP. Esto sugiere que la sobrecarga de BMSSP no
+proviene de un mayor footprint sostenido, sino de un volumen alto de
+asignaciones y liberaciones transitorias asociadas a su estructura recursiva
+por niveles (cola de lotes, mapas de pivotes), consistente con el dise\~no del
+algoritmo descrito en la Secci\'on III-A2.
+
+Un ajuste de ley de potencia ($t = c \cdot n^p$) sobre los tiempos medios del
+Experimento 1 produjo:
+\begin{align}
+t_{\text{Dijkstra}} &\approx 0.18 \cdot n^{1.12} \quad (R^2 = 0.997) \\
+t_{\text{BMSSP}} &\approx 5.48 \cdot n^{0.86} \quad (R^2 = 0.973)
+\end{align}
+Extrapolando ambos modelos, se estima un punto de cruce te\'orico en
+$n \approx 5.3 \times 10^5$. Sin embargo, esta cifra debe interpretarse con
+cautela: proviene de una extrapolaci\'on de un modelo emp\'irico ajustado sobre
+un rango de solo $n\in[100,6400]$, casi dos \'ordenes de magnitud por debajo
+del punto proyectado, y difiere sustancialmente del estimado por Castro et al.
+\cite{implbmssp2025} ($n\approx10^{67}$), obtenido mediante an\'alisis
+asint\'otico rigoroso de las constantes del algoritmo en lugar de extrapolaci\'on
+emp\'irica. Ambas cifras coinciden, no obstante, en la conclusi\'on cualitativa:
+BMSSP no superar\'ia a Dijkstra dentro de ning\'un rango de tama\~no
+computacionalmente alcanzable en la pr\'actica.
+
+\begin{table}[t]
+\caption{M\'etricas ampliadas, Experimento 1 (10 repeticiones)}
+\label{tab:metricas7}
+\centering
+\small
+\begin{tabular}{@{}rrrrr@{}}
+\toprule
+$n$ & Speedup & Heap Dij. (KB) & Heap BMSSP (KB) & Raz\'on \\
+\midrule
+100    & 9.44x & 8.8   & 291.5   & 33.3x \\
+200    & 9.49x & 17.5  & 601.7   & 34.3x \\
+400    & 5.45x & 35.1  & 949.0   & 27.0x \\
+800    & 4.39x & 70.2  & 1704.2  & 24.3x \\
+1\,600 & 4.49x & 140.5 & 3259.1  & 23.2x \\
+3\,200 & 3.82x & 281.0 & 6311.0  & 22.5x \\
+6\,400 & 3.47x & 562.0 & 12035.0 & 21.4x \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% Para insertar las figuras (copiar los .png a la carpeta figs/ del proyecto):
+% \begin{figure}[t]
+% \centering
+% \includegraphics[width=0.95\linewidth]{figs/fig_memoria_estructura_exp1.png}
+% \caption{Bytes de heap asignados durante la fase de soluci\'on (Experimento 1).}
+% \label{fig:heap}
+% \end{figure}
